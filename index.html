@@ -16,7 +16,6 @@
 }
 * { box-sizing:border-box; margin:0; padding:0; }
 body { font-family:'Noto Sans JP',sans-serif; background:var(--bg); color:#1a1a2e; font-size:12px; }
-
 .hdr {
   background:linear-gradient(135deg,var(--navy),var(--blue));
   color:#fff; padding:14px 20px 10px;
@@ -31,58 +30,18 @@ body { font-family:'Noto Sans JP',sans-serif; background:var(--bg); color:#1a1a2
 .today-lbl { font-size:11px; opacity:.8; }
 .btn-reset { background:rgba(255,255,255,.15); color:#fff; border:1px solid rgba(255,255,255,.3); padding:4px 12px; border-radius:4px; cursor:pointer; font-size:10px; font-family:inherit; }
 .btn-reset:hover { background:rgba(220,50,50,.6); }
-
 .tbl-wrap { overflow-x:auto; padding:10px 10px 100px; }
-
-table {
-  border-collapse: separate;
-  border-spacing: 0;
-  width:max-content; min-width:100%;
-  background:#fff;
-  box-shadow:var(--shadow);
-  border-radius:8px;
-}
-
-/* sticky thead */
-thead th {
-  position: sticky;
-  z-index: 10;
-}
-thead tr:first-child th {
-  background: var(--navy);
-  color:#fff; font-size:11px; font-weight:700; padding:7px 4px;
-  top: 0;
-}
-thead tr:nth-child(2) th {
-  background: var(--blue);
-  color:#fff; font-size:10px; font-weight:500; padding:5px 4px; line-height:1.3;
-  top: 37px; /* 1行目の高さ */
-}
-
-/* 日・曜のrowspan列は両行にまたがるので1行目のtopのまま高さを確保 */
-thead tr:first-child th[rowspan="2"] {
-  top: 0;
-}
-
-th, td {
-  border-right: 1px solid #d8dde8;
-  border-bottom: 1px solid #d8dde8;
-  padding:4px 5px; text-align:center; white-space:nowrap; vertical-align:middle;
-}
-thead tr:first-child th {
-  border-top: 1px solid #d8dde8;
-}
-tr td:first-child, tr th:first-child { border-left: 1px solid #d8dde8; }
-
+table { border-collapse:collapse; width:max-content; min-width:100%; background:#fff; box-shadow:var(--shadow); border-radius:8px; overflow:hidden; }
+thead tr:first-child th { background:var(--navy); color:#fff; font-size:11px; font-weight:700; padding:7px 4px; }
+thead tr:nth-child(2) th { background:var(--blue); color:#fff; font-size:10px; font-weight:500; padding:5px 4px; line-height:1.3; }
+th,td { border:1px solid #d8dde8; padding:4px 5px; text-align:center; white-space:nowrap; vertical-align:middle; }
 .cy{background:var(--yoso);} .cj{background:var(--jisseki);} .cz{background:var(--zennen);} .ck{background:var(--kyaku);} .cn{background:var(--jinken);}
-
 tr.sat td { background:#e9f0ff; }
 tr.sat td.dc,tr.sat td.wc { color:#1a3a9f; font-weight:700; }
 tr.sun td { background:#fff0f0; }
 tr.sun td.dc,tr.sun td.wc { color:#b71c1c; font-weight:700; }
 tr.today-row td { background:#fffde7 !important; outline:2px solid var(--accent); outline-offset:-2px; }
 tbody tr:hover td { filter:brightness(.97); }
-
 input[type=number] {
   width:64px; border:1.5px solid #90baf9; border-radius:4px;
   padding:3px 4px; text-align:center; font-size:12px;
@@ -94,26 +53,22 @@ input[type=number]::-webkit-outer-spin-button { -webkit-appearance:none; }
 input[type=number]:focus { outline:none; border-color:#1a3a7c; background:#c2dcff; }
 input.ci { background:#c8ecd8; border-color:#5aab78; width:70px; }
 input.ci:focus { background:#a8dfc0; border-color:#27ae60; }
-
 .calc { font-family:'JetBrains Mono',monospace; font-weight:500; }
 .good{color:var(--good);font-weight:700;} .bad{color:var(--bad);font-weight:700;}
-
-tfoot tr td { background:#e8edf8 !important; font-weight:700; border-top:2px solid var(--navy); font-family:'JetBrains Mono',monospace; }
-
+tfoot tr td { background:#e8edf8 !important; font-weight:700; border-top:2.5px solid var(--navy); font-family:'JetBrains Mono',monospace; }
 .toast { position:fixed; top:14px; right:14px; background:#27ae60; color:#fff; padding:9px 16px; border-radius:8px; font-size:12px; font-weight:700; box-shadow:0 4px 16px rgba(0,0,0,.25); z-index:9999; transform:translateY(-70px); opacity:0; transition:all .3s cubic-bezier(.34,1.56,.64,1); }
 .toast.show { transform:translateY(0); opacity:1; }
-
 .fbar { position:fixed; bottom:0; left:0; right:0; background:var(--navy); color:rgba(255,255,255,.8); padding:7px 16px; text-align:center; font-size:10px; z-index:150; }
 .fbar strong { color:var(--accent); }
 </style>
 </head>
 <body>
 
-<div class="hdr" id="hdr">
+<div class="hdr">
   <div class="hdr-top">
     <div>
-      <div class="hdr-title">4月腰塚売上表</div>
-      <div class="hdr-sub">2026年4月 ／ 齋藤作</div>
+      <div class="hdr-title">📊 人時売上管理表 — 4月腰塚売上表</div>
+      <div class="hdr-sub">塚新宿高島屋店 ／ 2026年4月 ／ 齋藤作</div>
     </div>
     <div class="jikyu-tag">¥1,697 / h</div>
   </div>
@@ -199,11 +154,13 @@ const YOSO = [
 
 const ZENNEN = [
   298,391,342,414,625,609,
-  237,195,
+  237, // 7日
+  195, // 8日（旧7日からシフト）
   262,309,260,769,628,133,254,307,268,
   370,690,640,250,287,277,325,348,728,
   664,410,623,309,
 ];
+// 合計12,222確認済み
 
 const ZN_CUM = ZENNEN.reduce((a,v,i)=>{ a.push((a[i-1]||0)+v); return a; },[]);
 const YS_CUM = YOSO.reduce((a,r,i)=>{ a.push((a[i-1]||0)+r.uri); return a; },[]);
@@ -227,18 +184,6 @@ function showToast(msg='✅ 保存しました',bg='#27ae60'){
 }
 
 function $(id){ return document.getElementById(id); }
-
-/* ヘッダー高さに合わせてtheadのtopを動的調整 */
-function adjustStickyTop(){
-  const hdrH = document.getElementById('hdr').offsetHeight;
-  document.querySelectorAll('thead tr:first-child th').forEach(th=>{
-    th.style.top = hdrH+'px';
-  });
-  const row1H = document.querySelector('thead tr:first-child th').offsetHeight;
-  document.querySelectorAll('thead tr:nth-child(2) th').forEach(th=>{
-    th.style.top = (hdrH + row1H)+'px';
-  });
-}
 
 function buildTable(){
   const tbody=$('tbody');
@@ -284,7 +229,8 @@ function onDaily(d){
     uri:   uv!==''?parseFloat(uv):null,
     jikan: jv!==''?parseFloat(jv):null,
     kyaku: kv!==''?parseInt(kv):null,
-    cumUriM:false, cumJikanM:false,
+    cumUriM:false,
+    cumJikanM:false,
   };
   save(); showToast(); recalc();
 }
@@ -310,44 +256,54 @@ function recalc(){
 
   YOSO.forEach((row,i)=>{
     const d=row.d, inp=store[d]||{};
-    const hasU=inp.uri!=null, hasJ=inp.jikan!=null, hasK=inp.kyaku!=null;
-    const uri   = hasU?(parseFloat(inp.uri)  ||0):0;
-    const jikan = hasJ?(parseFloat(inp.jikan)||0):0;
-    const kyaku = hasK?(parseInt(inp.kyaku)  ||0):0;
+    const hasU = inp.uri   != null;
+    const hasJ = inp.jikan != null;
+    const hasK = inp.kyaku != null;
+    const uri   = hasU ? (parseFloat(inp.uri)  ||0) : 0;
+    const jikan = hasJ ? (parseFloat(inp.jikan)||0) : 0;
+    const kyaku = hasK ? (parseInt(inp.kyaku)  ||0) : 0;
 
     if(hasK){ aCumK+=kyaku; finalCumK=aCumK; }
 
     let dCumU=null, dCumJ=null;
 
+    // ★修正ポイント：
+    // 日別あり → 前日累計＋当日で自動計算（手動入力があればそちら優先）
+    // 日別なし・手動累計あり → その値をprevCumに引き継ぐ（翌日計算の基準になる）
     if(hasU){
-      const autoU=prevCumU+uri;
-      dCumU=(inp.cumUriM&&inp.cumUri!=null)?inp.cumUri:autoU;
-      lastDay=d;
-    } else if(inp.cumUriM&&inp.cumUri!=null){
-      dCumU=inp.cumUri;
+      const autoU = prevCumU + uri;
+      dCumU = (inp.cumUriM && inp.cumUri!=null) ? inp.cumUri : autoU;
+      lastDay = d;
+    } else if(inp.cumUriM && inp.cumUri!=null){
+      dCumU = inp.cumUri; // 日別なしでも手動累計があれば引き継ぐ
     }
 
     if(hasJ){
-      const autoJ=prevCumJ+jikan;
-      dCumJ=(inp.cumJikanM&&inp.cumJikan!=null)?inp.cumJikan:autoJ;
-    } else if(inp.cumJikanM&&inp.cumJikan!=null){
-      dCumJ=inp.cumJikan;
+      const autoJ = prevCumJ + jikan;
+      dCumJ = (inp.cumJikanM && inp.cumJikan!=null) ? inp.cumJikan : autoJ;
+    } else if(inp.cumJikanM && inp.cumJikan!=null){
+      dCumJ = inp.cumJikan; // 日別なしでも手動累計があれば引き継ぐ
     }
 
+    // 入力欄に反映（フォーカス中は触らない）
     const cuEl=$(`cu-${d}`), cjEl=$(`cj-${d}`);
-    if(cuEl&&document.activeElement!==cuEl) cuEl.value=dCumU!=null?dCumU:'';
-    if(cjEl&&document.activeElement!==cjEl) cjEl.value=dCumJ!=null?dCumJ:'';
+    if(cuEl && document.activeElement!==cuEl) cuEl.value = dCumU!=null ? dCumU : '';
+    if(cjEl && document.activeElement!==cjEl) cjEl.value = dCumJ!=null ? dCumJ : '';
 
-    if(dCumU!=null) prevCumU=dCumU;
-    if(dCumJ!=null) prevCumJ=dCumJ;
-    finalCumU=dCumU!=null?dCumU:finalCumU;
-    finalCumJ=dCumJ!=null?dCumJ:finalCumJ;
+    // 次の日のために前日累計を更新
+    if(dCumU!=null) prevCumU = dCumU;
+    if(dCumJ!=null) prevCumJ = dCumJ;
+    finalCumU = dCumU!=null ? dCumU : finalCumU;
+    finalCumJ = dCumJ!=null ? dCumJ : finalCumJ;
 
-    if(dCumU!=null&&dCumJ!=null&&dCumJ>0)
-      $(`jinji-${d}`).textContent=(dCumU/dCumJ).toFixed(3);
-    else $(`jinji-${d}`).textContent='—';
+    // 人時売上（累計ベース）
+    if(dCumU!=null && dCumJ!=null && dCumJ>0)
+      $(`jinji-${d}`).textContent = (dCumU/dCumJ).toFixed(3);
+    else
+      $(`jinji-${d}`).textContent = '—';
 
-    if(dCumU!=null&&dCumU>0){
+    // 前年比・予想比（累計ベース）
+    if(dCumU!=null && dCumU>0){
       const znHi=dCumU/ZN_CUM[i]*100, ysHi=dCumU/YS_CUM[i]*100;
       const znEl=$(`zn-${d}`);
       znEl.textContent=znHi.toFixed(1)+'%';
@@ -360,13 +316,16 @@ function recalc(){
       $(`ys-${d}`).textContent='—'; $(`ys-${d}`).className='cz calc';
     }
 
-    if(hasU&&hasK&&uri>0&&kyaku>0)
-      $(`tanka-${d}`).textContent=Math.round(uri*1000/kyaku).toLocaleString();
-    else $(`tanka-${d}`).textContent='—';
+    // 客単価
+    if(hasU && hasK && uri>0 && kyaku>0)
+      $(`tanka-${d}`).textContent = Math.round(uri*1000/kyaku).toLocaleString();
+    else
+      $(`tanka-${d}`).textContent = '—';
 
-    if(hasU&&hasJ&&uri>0&&jikan>0){
-      const jkD=jikan*JIKYU/uri*0.1;
-      const jkC=(dCumU>0&&dCumJ>0)?dCumJ*JIKYU/dCumU*0.1:0;
+    // 人件費（日別＝日別ベース、累計＝累計ベース）
+    if(hasU && hasJ && uri>0 && jikan>0){
+      const jkD = jikan*JIKYU/uri*0.1;
+      const jkC = (dCumU>0 && dCumJ>0) ? dCumJ*JIKYU/dCumU*0.1 : 0;
       const dEl=$(`jkd-${d}`);
       dEl.textContent=jkD.toFixed(1)+'%';
       dEl.className='cn calc '+(jkD>25?'bad':jkD<=18?'good':'');
@@ -379,7 +338,7 @@ function recalc(){
     }
   });
 
-  updateSummary(finalCumU,finalCumJ,finalCumK,lastDay);
+  updateSummary(finalCumU, finalCumJ, finalCumK, lastDay);
 }
 
 function updateSummary(cumU,cumJ,cumK,lastDay){
@@ -388,18 +347,19 @@ function updateSummary(cumU,cumJ,cumK,lastDay){
       .forEach(id=>{ if($(id)) $(id).textContent='—'; });
     return;
   }
+  const znL=ZN_CUM[lastDay-1], ysL=YS_CUM[lastDay-1];
   if(cumU>0){
-    $('ft-uri').textContent=cumU.toLocaleString();
-    $('ft-zn').textContent=(cumU/12222*100).toFixed(1)+'%';
-    $('ft-ys').textContent=(cumU/12000*100).toFixed(1)+'%';
+    $('ft-uri').textContent  = cumU.toLocaleString();
+    $('ft-zn').textContent   = (cumU/12222*100).toFixed(1)+'%';
+    $('ft-ys').textContent   = (cumU/12000*100).toFixed(1)+'%';
   }
-  if(cumJ>0) $('ft-jikan').textContent=cumJ.toLocaleString();
-  if(cumU>0&&cumJ>0){
-    $('ft-jinji').textContent=(cumU/cumJ).toFixed(3);
-    $('ft-jk').textContent=(cumJ*JIKYU/cumU*0.1).toFixed(1)+'%';
+  if(cumJ>0) $('ft-jikan').textContent = cumJ.toLocaleString();
+  if(cumU>0 && cumJ>0){
+    $('ft-jinji').textContent = (cumU/cumJ).toFixed(3);
+    $('ft-jk').textContent    = (cumJ*JIKYU/cumU*0.1).toFixed(1)+'%';
   }
-  if(cumU>0&&cumK>0)
-    $('ft-tanka').textContent=Math.round(cumU*1000/cumK).toLocaleString();
+  if(cumU>0 && cumK>0)
+    $('ft-tanka').textContent = Math.round(cumU*1000/cumK).toLocaleString();
 }
 
 function updateTodayLbl(){
@@ -407,12 +367,7 @@ function updateTodayLbl(){
   $('today-lbl').textContent=`${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日（${dows[now.getDay()]}）`;
 }
 
-load();
-buildTable();
-recalc();
-updateTodayLbl();
-requestAnimationFrame(()=>{ adjustStickyTop(); });
-window.addEventListener('resize', adjustStickyTop);
+load(); buildTable(); recalc(); updateTodayLbl();
 </script>
 </body>
 </html>
