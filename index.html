@@ -341,15 +341,38 @@ function recalc(){
   updateSummary(finalCumU, finalCumJ, finalCumK, lastDay);
 }
 
+
+
 function updateSummary(cumU,cumJ,cumK,lastDay){
   if(lastDay===0){
     ['ft-uri','ft-jikan','ft-jinji','ft-zn','ft-ys','ft-tanka','ft-jk']
       .forEach(id=>{ if($(id)) $(id).textContent='—'; });
     return;
   }
-  const znL=ZN_CUM[lastDay-1], ysL=YS_CUM[lastDay-1];
+
+  // ★修正：その日までの累計を使用
+  const znL = ZN_CUM[lastDay-1];
+  const ysL = YS_CUM[lastDay-1];
+
   if(cumU>0){
     $('ft-uri').textContent  = cumU.toLocaleString();
+
+    // ★ここが修正ポイント
+    $('ft-zn').textContent   = (cumU/znL*100).toFixed(1)+'%';
+    $('ft-ys').textContent   = (cumU/ysL*100).toFixed(1)+'%';
+  }
+
+  if(cumJ>0) $('ft-jikan').textContent = cumJ.toLocaleString();
+
+  if(cumU>0 && cumJ>0){
+    $('ft-jinji').textContent = (cumU/cumJ).toFixed(3);
+    $('ft-jk').textContent    = (cumJ*JIKYU/cumU*0.1).toFixed(1)+'%';
+  }
+
+  if(cumU>0 && cumK>0)
+    $('ft-tanka').textContent = Math.round(cumU*1000/cumK).toLocaleString();
+}
+</script>
     $('ft-zn').textContent   = (cumU/12222*100).toFixed(1)+'%';
     $('ft-ys').textContent   = (cumU/12000*100).toFixed(1)+'%';
   }
