@@ -30,13 +30,7 @@ body { font-family:'Noto Sans JP',sans-serif; background:var(--bg); color:#1a1a2
 .today-lbl { font-size:11px; opacity:.8; }
 .btn-reset { background:rgba(255,255,255,.15); color:#fff; border:1px solid rgba(255,255,255,.3); padding:4px 12px; border-radius:4px; cursor:pointer; font-size:10px; font-family:inherit; }
 .btn-reset:hover { background:rgba(220,50,50,.6); }
-.cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(108px,1fr)); gap:8px; padding:10px; }
-.card { background:#fff; border-radius:8px; padding:9px 8px; box-shadow:var(--shadow); text-align:center; border-top:3px solid transparent; }
-.card.c-uri{border-color:var(--blue);} .card.c-zn{border-color:#e8b429;} .card.c-ys{border-color:#4a9eff;} .card.c-jk{border-color:#9b59b6;} .card.c-jj{border-color:#27ae60;}
-.card-lbl { font-size:10px; color:#78909c; margin-bottom:2px; }
-.card-val { font-size:16px; font-weight:900; color:var(--navy); font-family:'JetBrains Mono',monospace; }
-.card-val.good{color:var(--good);} .card-val.bad{color:var(--bad);}
-.tbl-wrap { overflow-x:auto; padding:0 10px 100px; }
+.tbl-wrap { overflow-x:auto; padding:10px 10px 100px; }
 table { border-collapse:collapse; width:max-content; min-width:100%; background:#fff; box-shadow:var(--shadow); border-radius:8px; overflow:hidden; }
 thead tr:first-child th { background:var(--navy); color:#fff; font-size:11px; font-weight:700; padding:7px 4px; }
 thead tr:nth-child(2) th { background:var(--blue); color:#fff; font-size:10px; font-weight:500; padding:5px 4px; line-height:1.3; }
@@ -73,7 +67,7 @@ tfoot tr td { background:#e8edf8 !important; font-weight:700; border-top:2.5px s
 <div class="hdr">
   <div class="hdr-top">
     <div>
-      <div class="hdr-title">4月腰塚売上表</div>
+      <div class="hdr-title">📊 人時売上管理表 — 4月腰塚売上表</div>
       <div class="hdr-sub">塚新宿高島屋店 ／ 2026年4月 ／ 齋藤作</div>
     </div>
     <div class="jikyu-tag">¥1,697 / h</div>
@@ -84,8 +78,6 @@ tfoot tr td { background:#e8edf8 !important; font-weight:700; border-top:2.5px s
     <button class="btn-reset" onclick="clearAll()">🗑 リセット</button>
   </div>
 </div>
-
-
 
 <div class="tbl-wrap">
 <table>
@@ -140,7 +132,7 @@ tfoot tr td { background:#e8edf8 !important; font-weight:700; border-top:2.5px s
 
 <script>
 const JIKYU = 1697;
-const KEY   = 'koshizuka_apr2026_v5';
+const KEY   = 'koshizuka_apr2026_v6';
 
 const YOSO = [
   {d:1, dow:'水',uri:260,jikan:44},{d:2, dow:'木',uri:260,jikan:44},
@@ -160,40 +152,15 @@ const YOSO = [
   {d:29,dow:'水',uri:650,jikan:68},{d:30,dow:'木',uri:300,jikan:44},
 ];
 
-// ★修正: 7日=237、8日=195、9日以降を1日ずつシフト　合計12,222確認済み
 const ZENNEN = [
-  298, // 1日
-  391, // 2日
-  342, // 3日
-  414, // 4日
-  625, // 5日
-  609, // 6日
-  237, // 7日 ★
-  195, // 8日 ★(旧7日)
-  262, // 9日
-  309, // 10日
-  260, // 11日
-  769, // 12日
-  628, // 13日
-  133, // 14日
-  254, // 15日
-  307, // 16日
-  268, // 17日
-  370, // 18日
-  690, // 19日
-  640, // 20日
-  250, // 21日
-  287, // 22日
-  277, // 23日
-  325, // 24日
-  348, // 25日
-  728, // 26日
-  664, // 27日
-  410, // 28日
-  623, // 29日
-  309, // 30日
+  298,391,342,414,625,609,
+  237, // 7日
+  195, // 8日（旧7日からシフト）
+  262,309,260,769,628,133,254,307,268,
+  370,690,640,250,287,277,325,348,728,
+  664,410,623,309,
 ];
-// 合計: 12,222 ✓
+// 合計12,222確認済み
 
 const ZN_CUM = ZENNEN.reduce((a,v,i)=>{ a.push((a[i-1]||0)+v); return a; },[]);
 const YS_CUM = YOSO.reduce((a,r,i)=>{ a.push((a[i-1]||0)+r.uri); return a; },[]);
@@ -262,7 +229,8 @@ function onDaily(d){
     uri:   uv!==''?parseFloat(uv):null,
     jikan: jv!==''?parseFloat(jv):null,
     kyaku: kv!==''?parseInt(kv):null,
-    cumUriM:false, cumJikanM:false,
+    cumUriM:false,
+    cumJikanM:false,
   };
   save(); showToast(); recalc();
 }
@@ -271,12 +239,12 @@ function onCum(d,type){
   if(!store[d]) store[d]={};
   if(type==='u'){
     const v=$(`cu-${d}`)?.value;
-    store[d].cumUri=v!==''?parseFloat(v):null;
-    store[d].cumUriM=v!=='';
+    store[d].cumUri  = v!==''?parseFloat(v):null;
+    store[d].cumUriM = v!=='';
   } else {
     const v=$(`cj-${d}`)?.value;
-    store[d].cumJikan=v!==''?parseFloat(v):null;
-    store[d].cumJikanM=v!=='';
+    store[d].cumJikan  = v!==''?parseFloat(v):null;
+    store[d].cumJikanM = v!=='';
   }
   save(); showToast(); recalc();
 }
@@ -288,43 +256,55 @@ function recalc(){
 
   YOSO.forEach((row,i)=>{
     const d=row.d, inp=store[d]||{};
-    const hasU=inp.uri!=null, hasJ=inp.jikan!=null, hasK=inp.kyaku!=null;
-    const uri=hasU?(parseFloat(inp.uri)||0):0;
-    const jikan=hasJ?(parseFloat(inp.jikan)||0):0;
-    const kyaku=hasK?(parseInt(inp.kyaku)||0):0;
+    const hasU = inp.uri   != null;
+    const hasJ = inp.jikan != null;
+    const hasK = inp.kyaku != null;
+    const uri   = hasU ? (parseFloat(inp.uri)  ||0) : 0;
+    const jikan = hasJ ? (parseFloat(inp.jikan)||0) : 0;
+    const kyaku = hasK ? (parseInt(inp.kyaku)  ||0) : 0;
 
     if(hasK){ aCumK+=kyaku; finalCumK=aCumK; }
 
-    // 累計 = 前日累計 + 当日（手動入力があればそちら優先）
     let dCumU=null, dCumJ=null;
+
+    // ★修正ポイント：
+    // 日別あり → 前日累計＋当日で自動計算（手動入力があればそちら優先）
+    // 日別なし・手動累計あり → その値をprevCumに引き継ぐ（翌日計算の基準になる）
     if(hasU){
-      const autoU=prevCumU+uri;
-      dCumU=inp.cumUriM&&inp.cumUri!=null?inp.cumUri:autoU;
-      lastDay=d;
+      const autoU = prevCumU + uri;
+      dCumU = (inp.cumUriM && inp.cumUri!=null) ? inp.cumUri : autoU;
+      lastDay = d;
+    } else if(inp.cumUriM && inp.cumUri!=null){
+      dCumU = inp.cumUri; // 日別なしでも手動累計があれば引き継ぐ
     }
+
     if(hasJ){
-      const autoJ=prevCumJ+jikan;
-      dCumJ=inp.cumJikanM&&inp.cumJikan!=null?inp.cumJikan:autoJ;
+      const autoJ = prevCumJ + jikan;
+      dCumJ = (inp.cumJikanM && inp.cumJikan!=null) ? inp.cumJikan : autoJ;
+    } else if(inp.cumJikanM && inp.cumJikan!=null){
+      dCumJ = inp.cumJikan; // 日別なしでも手動累計があれば引き継ぐ
     }
 
+    // 入力欄に反映（フォーカス中は触らない）
     const cuEl=$(`cu-${d}`), cjEl=$(`cj-${d}`);
-    if(cuEl&&document.activeElement!==cuEl) cuEl.value=dCumU??'';
-    if(cjEl&&document.activeElement!==cjEl) cjEl.value=dCumJ??'';
+    if(cuEl && document.activeElement!==cuEl) cuEl.value = dCumU!=null ? dCumU : '';
+    if(cjEl && document.activeElement!==cjEl) cjEl.value = dCumJ!=null ? dCumJ : '';
 
-    if(dCumU!=null) prevCumU=dCumU;
-    if(dCumJ!=null) prevCumJ=dCumJ;
-    finalCumU=dCumU??finalCumU;
-    finalCumJ=dCumJ??finalCumJ;
+    // 次の日のために前日累計を更新
+    if(dCumU!=null) prevCumU = dCumU;
+    if(dCumJ!=null) prevCumJ = dCumJ;
+    finalCumU = dCumU!=null ? dCumU : finalCumU;
+    finalCumJ = dCumJ!=null ? dCumJ : finalCumJ;
 
     // 人時売上（累計ベース）
-    if(dCumU!=null&&dCumJ!=null&&dCumJ>0)
-      $(`jinji-${d}`).textContent=(dCumU/dCumJ).toFixed(3);
-    else $(`jinji-${d}`).textContent='—';
+    if(dCumU!=null && dCumJ!=null && dCumJ>0)
+      $(`jinji-${d}`).textContent = (dCumU/dCumJ).toFixed(3);
+    else
+      $(`jinji-${d}`).textContent = '—';
 
     // 前年比・予想比（累計ベース）
-    if(dCumU!=null&&dCumU>0){
-      const znHi=dCumU/ZN_CUM[i]*100;
-      const ysHi=dCumU/YS_CUM[i]*100;
+    if(dCumU!=null && dCumU>0){
+      const znHi=dCumU/ZN_CUM[i]*100, ysHi=dCumU/YS_CUM[i]*100;
       const znEl=$(`zn-${d}`);
       znEl.textContent=znHi.toFixed(1)+'%';
       znEl.className='cz calc '+(znHi>=100?'good':'bad');
@@ -337,14 +317,15 @@ function recalc(){
     }
 
     // 客単価
-    if(hasU&&hasK&&uri>0&&kyaku>0)
-      $(`tanka-${d}`).textContent=Math.round(uri*1000/kyaku).toLocaleString();
-    else $(`tanka-${d}`).textContent='—';
+    if(hasU && hasK && uri>0 && kyaku>0)
+      $(`tanka-${d}`).textContent = Math.round(uri*1000/kyaku).toLocaleString();
+    else
+      $(`tanka-${d}`).textContent = '—';
 
-    // 人件費
-    if(hasU&&hasJ&&uri>0&&jikan>0){
-      const jkD=jikan*JIKYU/uri*0.1;
-      const jkC=(dCumU>0&&dCumJ>0)?dCumJ*JIKYU/dCumU*0.1:0;
+    // 人件費（日別＝日別ベース、累計＝累計ベース）
+    if(hasU && hasJ && uri>0 && jikan>0){
+      const jkD = jikan*JIKYU/uri*0.1;
+      const jkC = (dCumU>0 && dCumJ>0) ? dCumJ*JIKYU/dCumU*0.1 : 0;
       const dEl=$(`jkd-${d}`);
       dEl.textContent=jkD.toFixed(1)+'%';
       dEl.className='cn calc '+(jkD>25?'bad':jkD<=18?'good':'');
@@ -357,32 +338,32 @@ function recalc(){
     }
   });
 
-  updateSummary(finalCumU,finalCumJ,finalCumK,lastDay);
+  updateSummary(finalCumU, finalCumJ, finalCumK, lastDay);
 }
 
 function updateSummary(cumU,cumJ,cumK,lastDay){
   if(lastDay===0){
-    ['s-uri','s-zn','s-ys','s-jk','s-jj'].forEach(id=>{$(id).textContent='—';$(id).className='card-val';});
-    ['ft-uri','ft-jikan','ft-jinji','ft-zn','ft-ys','ft-tanka','ft-jk'].forEach(id=>{if($(id))$(id).textContent='—';});
+    ['ft-uri','ft-jikan','ft-jinji','ft-zn','ft-ys','ft-tanka','ft-jk']
+      .forEach(id=>{ if($(id)) $(id).textContent='—'; });
     return;
   }
-  $('s-uri').textContent=cumU.toLocaleString()+'千'; $('s-uri').className='card-val';
   const znL=ZN_CUM[lastDay-1], ysL=YS_CUM[lastDay-1];
-  if(znL>0){const zn=cumU/znL*100;$('s-zn').textContent=zn.toFixed(1)+'%';$('s-zn').className='card-val '+(zn>=100?'good':'bad');}
-  if(ysL>0){const ys=cumU/ysL*100;$('s-ys').textContent=ys.toFixed(1)+'%';$('s-ys').className='card-val '+(ys>=100?'good':'bad');}
-  if(cumU>0&&cumJ>0){
-    const jk=cumJ*JIKYU/cumU*0.1;
-    $('s-jk').textContent=jk.toFixed(1)+'%'; $('s-jk').className='card-val '+(jk>25?'bad':'good');
-    $('s-jj').textContent=(cumU/cumJ).toFixed(3);
+  if(cumU>0){
+    $('ft-uri').textContent  = cumU.toLocaleString();
+    $('ft-zn').textContent   = (cumU/12222*100).toFixed(1)+'%';
+    $('ft-ys').textContent   = (cumU/12000*100).toFixed(1)+'%';
   }
-  if(cumU>0){$('ft-uri').textContent=cumU.toLocaleString();$('ft-zn').textContent=(cumU/12222*100).toFixed(1)+'%';$('ft-ys').textContent=(cumU/12000*100).toFixed(1)+'%';}
-  if(cumJ>0) $('ft-jikan').textContent=cumJ.toLocaleString();
-  if(cumU>0&&cumJ>0){$('ft-jinji').textContent=(cumU/cumJ).toFixed(3);$('ft-jk').textContent=(cumJ*JIKYU/cumU*0.1).toFixed(1)+'%';}
-  if(cumU>0&&cumK>0) $('ft-tanka').textContent=Math.round(cumU*1000/cumK).toLocaleString();
+  if(cumJ>0) $('ft-jikan').textContent = cumJ.toLocaleString();
+  if(cumU>0 && cumJ>0){
+    $('ft-jinji').textContent = (cumU/cumJ).toFixed(3);
+    $('ft-jk').textContent    = (cumJ*JIKYU/cumU*0.1).toFixed(1)+'%';
+  }
+  if(cumU>0 && cumK>0)
+    $('ft-tanka').textContent = Math.round(cumU*1000/cumK).toLocaleString();
 }
 
 function updateTodayLbl(){
-  const now=new Date(),dows=['日','月','火','水','木','金','土'];
+  const now=new Date(), dows=['日','月','火','水','木','金','土'];
   $('today-lbl').textContent=`${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日（${dows[now.getDay()]}）`;
 }
 
