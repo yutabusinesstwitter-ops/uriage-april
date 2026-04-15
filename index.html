@@ -35,19 +35,6 @@ table { border-collapse:collapse; width:max-content; min-width:100%; background:
 thead tr:first-child th { background:var(--navy); color:#fff; font-size:11px; font-weight:700; padding:7px 4px; }
 thead tr:nth-child(2) th { background:var(--blue); color:#fff; font-size:10px; font-weight:500; padding:5px 4px; line-height:1.3; }
 th,td { border:1px solid #d8dde8; padding:4px 5px; text-align:center; white-space:nowrap; vertical-align:middle; }
-
-/* ===== ヘッダー固定（追加） ===== */
-thead tr:first-child th {
-  position: sticky;
-  top: 56px;
-  z-index: 101;
-}
-thead tr:nth-child(2) th {
-  position: sticky;
-  top: 84px;
-  z-index: 100;
-}
-
 .cy{background:var(--yoso);} .cj{background:var(--jisseki);} .cz{background:var(--zennen);} .ck{background:var(--kyaku);} .cn{background:var(--jinken);}
 tr.sat td { background:#e9f0ff; }
 tr.sat td.dc,tr.sat td.wc { color:#1a3a9f; font-weight:700; }
@@ -80,8 +67,8 @@ tfoot tr td { background:#e8edf8 !important; font-weight:700; border-top:2.5px s
 <div class="hdr">
   <div class="hdr-top">
     <div>
-      <div class="hdr-title">4月腰塚売上表</div>
-      <div class="hdr-sub">2026年4月 ／ 齋藤作</div>
+      <div class="hdr-title">📊 人時売上管理表 — 4月腰塚売上表</div>
+      <div class="hdr-sub">塚新宿高島屋店 ／ 2026年4月 ／ 齋藤作</div>
     </div>
     <div class="jikyu-tag">¥1,697 / h</div>
   </div>
@@ -144,11 +131,243 @@ tfoot tr td { background:#e8edf8 !important; font-weight:700; border-top:2.5px s
 </div>
 
 <script>
-/* JSは変更なし（そのまま） */
 const JIKYU = 1697;
 const KEY   = 'koshizuka_apr2026_v6';
 
-/* 以下省略なしで元コードそのまま */
+const YOSO = [
+  {d:1, dow:'水',uri:260,jikan:44},{d:2, dow:'木',uri:260,jikan:44},
+  {d:3, dow:'金',uri:380,jikan:51},{d:4, dow:'土',uri:680,jikan:68},
+  {d:5, dow:'日',uri:650,jikan:63},{d:6, dow:'月',uri:230,jikan:44},
+  {d:7, dow:'火',uri:250,jikan:44},{d:8, dow:'水',uri:280,jikan:44},
+  {d:9, dow:'木',uri:260,jikan:44},{d:10,dow:'金',uri:400,jikan:50},
+  {d:11,dow:'土',uri:680,jikan:68},{d:12,dow:'日',uri:650,jikan:65},
+  {d:13,dow:'月',uri:230,jikan:44},{d:14,dow:'火',uri:250,jikan:44},
+  {d:15,dow:'水',uri:260,jikan:44},{d:16,dow:'木',uri:260,jikan:44},
+  {d:17,dow:'金',uri:380,jikan:51},{d:18,dow:'土',uri:680,jikan:68},
+  {d:19,dow:'日',uri:650,jikan:63},{d:20,dow:'月',uri:230,jikan:44},
+  {d:21,dow:'火',uri:250,jikan:44},{d:22,dow:'水',uri:260,jikan:44},
+  {d:23,dow:'木',uri:250,jikan:44},{d:24,dow:'金',uri:380,jikan:53},
+  {d:25,dow:'土',uri:680,jikan:63},{d:26,dow:'日',uri:630,jikan:65},
+  {d:27,dow:'月',uri:280,jikan:44},{d:28,dow:'火',uri:400,jikan:50},
+  {d:29,dow:'水',uri:650,jikan:68},{d:30,dow:'木',uri:300,jikan:44},
+];
+
+const ZENNEN = [
+  298,391,342,414,625,609,
+  237, // 7日
+  195, // 8日（旧7日からシフト）
+  262,309,260,769,628,133,254,307,268,
+  370,690,640,250,287,277,325,348,728,
+  664,410,623,309,
+];
+// 合計12,222確認済み
+
+const ZN_CUM = ZENNEN.reduce((a,v,i)=>{ a.push((a[i-1]||0)+v); return a; },[]);
+const YS_CUM = YOSO.reduce((a,r,i)=>{ a.push((a[i-1]||0)+r.uri); return a; },[]);
+
+let store = {};
+function load(){ try{ store=JSON.parse(localStorage.getItem(KEY)||'{}'); }catch{ store={}; } }
+function save(){ localStorage.setItem(KEY,JSON.stringify(store)); }
+function clearAll(){
+  if(!confirm('全データをリセットしますか？')) return;
+  store={}; localStorage.removeItem(KEY);
+  document.querySelectorAll('input[type=number]').forEach(el=>el.value='');
+  recalc(); showToast('🗑 リセットしました','#e74c3c');
+}
+
+let _tt;
+function showToast(msg='✅ 保存しました',bg='#27ae60'){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.style.background=bg;
+  t.classList.add('show'); clearTimeout(_tt);
+  _tt=setTimeout(()=>t.classList.remove('show'),2000);
+}
+
+function $(id){ return document.getElementById(id); }
+
+function buildTable(){
+  const tbody=$('tbody');
+  const now=new Date();
+  const todayD=(now.getFullYear()===2026&&now.getMonth()===3)?now.getDate():-1;
+
+  YOSO.forEach((row,i)=>{
+    const inp=store[row.d]||{};
+    const tr=document.createElement('tr');
+    if(row.dow==='土') tr.classList.add('sat');
+    if(row.dow==='日') tr.classList.add('sun');
+    if(row.d===todayD) tr.classList.add('today-row');
+
+    tr.innerHTML=`
+      <td class="dc"><strong>${row.d}</strong></td>
+      <td class="wc">${row.dow}</td>
+      <td class="cy">${row.uri.toLocaleString()}</td>
+      <td class="cy">${row.jikan}</td>
+      <td class="cy">${(row.uri/row.jikan).toFixed(3)}</td>
+      <td class="cj"><input type="number" id="uri-${row.d}" value="${inp.uri??''}" placeholder="—" step="0.5" min="0" oninput="onDaily(${row.d})"></td>
+      <td class="cj"><input type="number" id="cu-${row.d}" class="ci" value="${inp.cumUri??''}" placeholder="自動" step="0.5" min="0" oninput="onCum(${row.d},'u')"></td>
+      <td class="cj"><input type="number" id="jikan-${row.d}" value="${inp.jikan??''}" placeholder="—" step="0.5" min="0" oninput="onDaily(${row.d})"></td>
+      <td class="cj"><input type="number" id="cj-${row.d}" class="ci" value="${inp.cumJikan??''}" placeholder="自動" step="0.5" min="0" oninput="onCum(${row.d},'j')"></td>
+      <td class="cj calc" id="jinji-${row.d}">—</td>
+      <td class="cz">${ZENNEN[i].toLocaleString()}</td>
+      <td class="cz">${ZN_CUM[i].toLocaleString()}</td>
+      <td class="cz calc" id="zn-${row.d}">—</td>
+      <td class="cz calc" id="ys-${row.d}">—</td>
+      <td class="ck"><input type="number" id="kyaku-${row.d}" value="${inp.kyaku??''}" placeholder="—" min="0" oninput="onDaily(${row.d})"></td>
+      <td class="ck calc" id="tanka-${row.d}">—</td>
+      <td class="cn calc" id="jkd-${row.d}">—</td>
+      <td class="cn calc" id="jkc-${row.d}">—</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function onDaily(d){
+  const inp=store[d]||{};
+  const uv=$(`uri-${d}`)?.value, jv=$(`jikan-${d}`)?.value, kv=$(`kyaku-${d}`)?.value;
+  store[d]={
+    ...inp,
+    uri:   uv!==''?parseFloat(uv):null,
+    jikan: jv!==''?parseFloat(jv):null,
+    kyaku: kv!==''?parseInt(kv):null,
+    cumUriM:false,
+    cumJikanM:false,
+  };
+  save(); showToast(); recalc();
+}
+
+function onCum(d,type){
+  if(!store[d]) store[d]={};
+  if(type==='u'){
+    const v=$(`cu-${d}`)?.value;
+    store[d].cumUri  = v!==''?parseFloat(v):null;
+    store[d].cumUriM = v!=='';
+  } else {
+    const v=$(`cj-${d}`)?.value;
+    store[d].cumJikan  = v!==''?parseFloat(v):null;
+    store[d].cumJikanM = v!=='';
+  }
+  save(); showToast(); recalc();
+}
+
+function recalc(){
+  let lastDay=0;
+  let prevCumU=0, prevCumJ=0;
+  let finalCumU=0, finalCumJ=0, finalCumK=0, aCumK=0;
+
+  YOSO.forEach((row,i)=>{
+    const d=row.d, inp=store[d]||{};
+    const hasU = inp.uri   != null;
+    const hasJ = inp.jikan != null;
+    const hasK = inp.kyaku != null;
+    const uri   = hasU ? (parseFloat(inp.uri)  ||0) : 0;
+    const jikan = hasJ ? (parseFloat(inp.jikan)||0) : 0;
+    const kyaku = hasK ? (parseInt(inp.kyaku)  ||0) : 0;
+
+    if(hasK){ aCumK+=kyaku; finalCumK=aCumK; }
+
+    let dCumU=null, dCumJ=null;
+
+    // ★修正ポイント：
+    // 日別あり → 前日累計＋当日で自動計算（手動入力があればそちら優先）
+    // 日別なし・手動累計あり → その値をprevCumに引き継ぐ（翌日計算の基準になる）
+    if(hasU){
+      const autoU = prevCumU + uri;
+      dCumU = (inp.cumUriM && inp.cumUri!=null) ? inp.cumUri : autoU;
+      lastDay = d;
+    } else if(inp.cumUriM && inp.cumUri!=null){
+      dCumU = inp.cumUri; // 日別なしでも手動累計があれば引き継ぐ
+    }
+
+    if(hasJ){
+      const autoJ = prevCumJ + jikan;
+      dCumJ = (inp.cumJikanM && inp.cumJikan!=null) ? inp.cumJikan : autoJ;
+    } else if(inp.cumJikanM && inp.cumJikan!=null){
+      dCumJ = inp.cumJikan; // 日別なしでも手動累計があれば引き継ぐ
+    }
+
+    // 入力欄に反映（フォーカス中は触らない）
+    const cuEl=$(`cu-${d}`), cjEl=$(`cj-${d}`);
+    if(cuEl && document.activeElement!==cuEl) cuEl.value = dCumU!=null ? dCumU : '';
+    if(cjEl && document.activeElement!==cjEl) cjEl.value = dCumJ!=null ? dCumJ : '';
+
+    // 次の日のために前日累計を更新
+    if(dCumU!=null) prevCumU = dCumU;
+    if(dCumJ!=null) prevCumJ = dCumJ;
+    finalCumU = dCumU!=null ? dCumU : finalCumU;
+    finalCumJ = dCumJ!=null ? dCumJ : finalCumJ;
+
+    // 人時売上（累計ベース）
+    if(dCumU!=null && dCumJ!=null && dCumJ>0)
+      $(`jinji-${d}`).textContent = (dCumU/dCumJ).toFixed(3);
+    else
+      $(`jinji-${d}`).textContent = '—';
+
+    // 前年比・予想比（累計ベース）
+    if(dCumU!=null && dCumU>0){
+      const znHi=dCumU/ZN_CUM[i]*100, ysHi=dCumU/YS_CUM[i]*100;
+      const znEl=$(`zn-${d}`);
+      znEl.textContent=znHi.toFixed(1)+'%';
+      znEl.className='cz calc '+(znHi>=100?'good':'bad');
+      const ysEl=$(`ys-${d}`);
+      ysEl.textContent=ysHi.toFixed(1)+'%';
+      ysEl.className='cz calc '+(ysHi>=100?'good':'bad');
+    } else {
+      $(`zn-${d}`).textContent='—'; $(`zn-${d}`).className='cz calc';
+      $(`ys-${d}`).textContent='—'; $(`ys-${d}`).className='cz calc';
+    }
+
+    // 客単価
+    if(hasU && hasK && uri>0 && kyaku>0)
+      $(`tanka-${d}`).textContent = Math.round(uri*1000/kyaku).toLocaleString();
+    else
+      $(`tanka-${d}`).textContent = '—';
+
+    // 人件費（日別＝日別ベース、累計＝累計ベース）
+    if(hasU && hasJ && uri>0 && jikan>0){
+      const jkD = jikan*JIKYU/uri*0.1;
+      const jkC = (dCumU>0 && dCumJ>0) ? dCumJ*JIKYU/dCumU*0.1 : 0;
+      const dEl=$(`jkd-${d}`);
+      dEl.textContent=jkD.toFixed(1)+'%';
+      dEl.className='cn calc '+(jkD>25?'bad':jkD<=18?'good':'');
+      const cEl=$(`jkc-${d}`);
+      cEl.textContent=jkC>0?jkC.toFixed(1)+'%':'—';
+      cEl.className='cn calc '+(jkC>25?'bad':jkC>0&&jkC<=18?'good':'');
+    } else {
+      $(`jkd-${d}`).textContent='—'; $(`jkd-${d}`).className='cn calc';
+      $(`jkc-${d}`).textContent='—'; $(`jkc-${d}`).className='cn calc';
+    }
+  });
+
+  updateSummary(finalCumU, finalCumJ, finalCumK, lastDay);
+}
+
+function updateSummary(cumU,cumJ,cumK,lastDay){
+  if(lastDay===0){
+    ['ft-uri','ft-jikan','ft-jinji','ft-zn','ft-ys','ft-tanka','ft-jk']
+      .forEach(id=>{ if($(id)) $(id).textContent='—'; });
+    return;
+  }
+  const znL=ZN_CUM[lastDay-1], ysL=YS_CUM[lastDay-1];
+  if(cumU>0){
+    $('ft-uri').textContent  = cumU.toLocaleString();
+    $('ft-zn').textContent   = (cumU/12222*100).toFixed(1)+'%';
+    $('ft-ys').textContent   = (cumU/12000*100).toFixed(1)+'%';
+  }
+  if(cumJ>0) $('ft-jikan').textContent = cumJ.toLocaleString();
+  if(cumU>0 && cumJ>0){
+    $('ft-jinji').textContent = (cumU/cumJ).toFixed(3);
+    $('ft-jk').textContent    = (cumJ*JIKYU/cumU*0.1).toFixed(1)+'%';
+  }
+  if(cumU>0 && cumK>0)
+    $('ft-tanka').textContent = Math.round(cumU*1000/cumK).toLocaleString();
+}
+
+function updateTodayLbl(){
+  const now=new Date(), dows=['日','月','火','水','木','金','土'];
+  $('today-lbl').textContent=`${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日（${dows[now.getDay()]}）`;
+}
+
+load(); buildTable(); recalc(); updateTodayLbl();
 </script>
 </body>
 </html>
