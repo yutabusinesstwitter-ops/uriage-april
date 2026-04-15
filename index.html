@@ -34,18 +34,46 @@ body { font-family:'Noto Sans JP',sans-serif; background:var(--bg); color:#1a1a2
 
 .tbl-wrap { overflow-x:auto; padding:10px 10px 100px; }
 
-table { border-collapse:collapse; width:max-content; min-width:100%; background:#fff; box-shadow:var(--shadow); border-radius:8px; overflow:visible; }
+table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width:max-content; min-width:100%;
+  background:#fff;
+  box-shadow:var(--shadow);
+  border-radius:8px;
+}
 
+/* sticky thead */
+thead th {
+  position: sticky;
+  z-index: 10;
+}
 thead tr:first-child th {
-  background:var(--navy); color:#fff; font-size:11px; font-weight:700; padding:7px 4px;
-  position:sticky; top:63px; z-index:100;
+  background: var(--navy);
+  color:#fff; font-size:11px; font-weight:700; padding:7px 4px;
+  top: 0;
 }
 thead tr:nth-child(2) th {
-  background:var(--blue); color:#fff; font-size:10px; font-weight:500; padding:5px 4px; line-height:1.3;
-  position:sticky; top:106px; z-index:100;
+  background: var(--blue);
+  color:#fff; font-size:10px; font-weight:500; padding:5px 4px; line-height:1.3;
+  top: 37px; /* 1行目の高さ */
 }
 
-th,td { border:1px solid #d8dde8; padding:4px 5px; text-align:center; white-space:nowrap; vertical-align:middle; }
+/* 日・曜のrowspan列は両行にまたがるので1行目のtopのまま高さを確保 */
+thead tr:first-child th[rowspan="2"] {
+  top: 0;
+}
+
+th, td {
+  border-right: 1px solid #d8dde8;
+  border-bottom: 1px solid #d8dde8;
+  padding:4px 5px; text-align:center; white-space:nowrap; vertical-align:middle;
+}
+thead tr:first-child th {
+  border-top: 1px solid #d8dde8;
+}
+tr td:first-child, tr th:first-child { border-left: 1px solid #d8dde8; }
+
 .cy{background:var(--yoso);} .cj{background:var(--jisseki);} .cz{background:var(--zennen);} .ck{background:var(--kyaku);} .cn{background:var(--jinken);}
 
 tr.sat td { background:#e9f0ff; }
@@ -70,7 +98,7 @@ input.ci:focus { background:#a8dfc0; border-color:#27ae60; }
 .calc { font-family:'JetBrains Mono',monospace; font-weight:500; }
 .good{color:var(--good);font-weight:700;} .bad{color:var(--bad);font-weight:700;}
 
-tfoot tr td { background:#e8edf8 !important; font-weight:700; border-top:2.5px solid var(--navy); font-family:'JetBrains Mono',monospace; }
+tfoot tr td { background:#e8edf8 !important; font-weight:700; border-top:2px solid var(--navy); font-family:'JetBrains Mono',monospace; }
 
 .toast { position:fixed; top:14px; right:14px; background:#27ae60; color:#fff; padding:9px 16px; border-radius:8px; font-size:12px; font-weight:700; box-shadow:0 4px 16px rgba(0,0,0,.25); z-index:9999; transform:translateY(-70px); opacity:0; transition:all .3s cubic-bezier(.34,1.56,.64,1); }
 .toast.show { transform:translateY(0); opacity:1; }
@@ -84,8 +112,8 @@ tfoot tr td { background:#e8edf8 !important; font-weight:700; border-top:2.5px s
 <div class="hdr" id="hdr">
   <div class="hdr-top">
     <div>
-      <div class="hdr-title">📊 人時売上管理表 — 4月腰塚売上表</div>
-      <div class="hdr-sub">塚新宿高島屋店 ／ 2026年4月 ／ 齋藤作</div>
+      <div class="hdr-title">4月腰塚売上表</div>
+      <div class="hdr-sub">2026年4月 ／ 齋藤作</div>
     </div>
     <div class="jikyu-tag">¥1,697 / h</div>
   </div>
@@ -200,15 +228,16 @@ function showToast(msg='✅ 保存しました',bg='#27ae60'){
 
 function $(id){ return document.getElementById(id); }
 
-/* ヘッダー高さを動的に取得してthead のtopを設定 */
+/* ヘッダー高さに合わせてtheadのtopを動的調整 */
 function adjustStickyTop(){
   const hdrH = document.getElementById('hdr').offsetHeight;
-  const row1ths = document.querySelectorAll('thead tr:first-child th');
-  const row2ths = document.querySelectorAll('thead tr:nth-child(2) th');
-  row1ths.forEach(th => th.style.top = hdrH + 'px');
-  // 1行目の高さも動的に取得
-  const row1H = row1ths[0] ? row1ths[0].offsetHeight : 36;
-  row2ths.forEach(th => th.style.top = (hdrH + row1H) + 'px');
+  document.querySelectorAll('thead tr:first-child th').forEach(th=>{
+    th.style.top = hdrH+'px';
+  });
+  const row1H = document.querySelector('thead tr:first-child th').offsetHeight;
+  document.querySelectorAll('thead tr:nth-child(2) th').forEach(th=>{
+    th.style.top = (hdrH + row1H)+'px';
+  });
 }
 
 function buildTable(){
@@ -314,12 +343,10 @@ function recalc(){
     finalCumU=dCumU!=null?dCumU:finalCumU;
     finalCumJ=dCumJ!=null?dCumJ:finalCumJ;
 
-    // 人時売上（累計）
     if(dCumU!=null&&dCumJ!=null&&dCumJ>0)
       $(`jinji-${d}`).textContent=(dCumU/dCumJ).toFixed(3);
     else $(`jinji-${d}`).textContent='—';
 
-    // 前年比・予想比（累計）
     if(dCumU!=null&&dCumU>0){
       const znHi=dCumU/ZN_CUM[i]*100, ysHi=dCumU/YS_CUM[i]*100;
       const znEl=$(`zn-${d}`);
@@ -333,12 +360,10 @@ function recalc(){
       $(`ys-${d}`).textContent='—'; $(`ys-${d}`).className='cz calc';
     }
 
-    // 客単価
     if(hasU&&hasK&&uri>0&&kyaku>0)
       $(`tanka-${d}`).textContent=Math.round(uri*1000/kyaku).toLocaleString();
     else $(`tanka-${d}`).textContent='—';
 
-    // 人件費
     if(hasU&&hasJ&&uri>0&&jikan>0){
       const jkD=jikan*JIKYU/uri*0.1;
       const jkC=(dCumU>0&&dCumJ>0)?dCumJ*JIKYU/dCumU*0.1:0;
@@ -364,7 +389,7 @@ function updateSummary(cumU,cumJ,cumK,lastDay){
     return;
   }
   if(cumU>0){
-    $('ft-uri').textContent=(cumU.toLocaleString());
+    $('ft-uri').textContent=cumU.toLocaleString();
     $('ft-zn').textContent=(cumU/12222*100).toFixed(1)+'%';
     $('ft-ys').textContent=(cumU/12000*100).toFixed(1)+'%';
   }
@@ -386,8 +411,7 @@ load();
 buildTable();
 recalc();
 updateTodayLbl();
-// DOMが描画されてからヘッダー高さを計算
-requestAnimationFrame(adjustStickyTop);
+requestAnimationFrame(()=>{ adjustStickyTop(); });
 window.addEventListener('resize', adjustStickyTop);
 </script>
 </body>
